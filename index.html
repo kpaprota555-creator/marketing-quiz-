@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>AI Marketing Quiz - Premium</title>
+<style>
+body{
+margin:0;
+font-family:Segoe UI,sans-serif;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+}
+header{
+display:flex;
+align-items:center;
+padding:15px 30px;
+background:#020617;
+position:sticky;
+top:0;
+z-index:10;
+}
+header img{height:38px;}
+.container{
+max-width:980px;
+margin:40px auto;
+padding:30px;
+background:rgba(17,24,39,0.95);
+border-radius:20px;
+box-shadow:0 25px 70px rgba(0,0,0,0.6);
+}
+
+h1{text-align:center;}
+
+.tabs{
+display:flex;
+justify-content:center;
+margin-bottom:20px;
+}
+.tab{
+padding:10px 18px;
+margin:0 8px;
+background:#1f2937;
+border-radius:10px;
+cursor:pointer;
+}
+.tab.active{background:#2563eb;}
+
+.section{display:none;}
+.section.active{display:block;}
+
+.question{
+background:#111827;
+padding:18px;
+border-radius:12px;
+margin-bottom:15px;
+border-left:4px solid #3b82f6;
+}
+.option{
+display:block;
+padding:8px;
+margin:6px 0;
+background:#1f2937;
+border-radius:8px;
+cursor:pointer;
+}
+button{
+padding:12px 18px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+margin:5px;
+}
+button:hover{background:#1d4ed8;}
+
+.timer{
+text-align:center;
+color:#60a5fa;
+margin-bottom:10px;
+font-size:18px;
+}
+
+#qNumber{text-align:center;margin-bottom:10px;}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.75);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+.modal-box{
+background:#111827;
+padding:20px;
+border-radius:12px;
+width:320px;
+text-align:center;
+}
+.modal-box input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border:none;
+border-radius:8px;
+}
+
+#result{
+text-align:center;
+font-size:22px;
+margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<header>
+<img src="https://www.pngkey.com/png/full/177-1773101_kpmg-logo.png">
+</header>
+
+<div class="modal" id="modal">
+<div class="modal-box">
+<h3>Wpisz nick</h3>
+<input id="nicknameInput" placeholder="Nick / Imię">
+<button onclick="confirmNick()">Potwierdź</button>
+<button onclick="cancelNick()">Anuluj</button>
+</div>
+</div>
+
+<div class="container">
+<h1>AI Marketing Quiz</h1>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('quiz')">Quiz</div>
+<div class="tab" onclick="showTab('ranking')">Ranking</div>
+<div class="tab" onclick="showTab('about')">O mnie</div>
+</div>
+
+<div id="quiz" class="section active">
+<div class="timer" id="timer">60</div>
+<div id="qNumber"></div>
+<div id="quizBox"></div>
+<div style="text-align:center;">
+<button onclick="prev()">Cofnij</button>
+<button id="nextBtn" onclick="next()">Dalej</button>
+</div>
+<div id="result"></div>
+</div>
+
+<div id="ranking" class="section">
+<h2>Ranking</h2>
+<ol id="board"></ol>
+</div>
+
+<div id="about" class="section">
+<h2>O mnie</h2>
+<p>Nazywam się Kamil, mam 15 lat i chodzę do szkoły w Złoczewie.</p>
+<p>Interesuję się marketingiem cyfrowym oraz sztuczną inteligencją.</p>
+<p>Jestem finalistą konkursu Digital Wizards i rozwijam się w nowoczesnym marketingu internetowym.</p>
+</div>
+</div>
+
+<script>
+// ranking NIE jest resetowany — dane zostają zapisane w przeglądarce
+// (idealne do użycia w klasie)
+
+const q=[
+["Co to SEO?",[
+"SEO to proces optymalizacji strony internetowej w celu zwiększenia widoczności w organicznych wynikach wyszukiwania i poprawy ruchu",
+"SEO to metoda emisji reklam telewizyjnych w celu promocji marki w mediach offline",
+"SEO to tworzenie gier komputerowych oraz aplikacji mobilnych na potrzeby rynku rozrywki",
+"SEO to projektowanie logo oraz identyfikacji wizualnej dla firm i organizacji"
+],0],
+["CTR?",[
+"CTR to wskaźnik kliknięć reklam lub linków pokazujący stosunek kliknięć do liczby wyświetleń",
+"CTR to całkowity koszt prowadzenia kampanii marketingowej w różnych kanałach reklamowych",
+"CTR to narzędzie do projektowania stron internetowych oraz interfejsów użytkownika",
+"CTR to system analizy czasu spędzanego przez użytkownika na stronie internetowej"
+],0],
+["Google Ads?",[
+"Google Ads to platforma reklamowa umożliwiająca tworzenie i wyświetlanie płatnych kampanii w wyszukiwarce Google",
+"Google Ads to system hostingowy do przechowywania stron internetowych oraz plików serwerowych",
+"Google Ads to program do tworzenia i wysyłania masowych wiadomości e-mail do klientów",
+"Google Ads to narzędzie do projektowania grafiki reklamowej i materiałów wizualnych"
+],0],
+["Content marketing?",[
+"Content marketing to strategia polegająca na tworzeniu wartościowych treści w celu przyciągania i angażowania odbiorców",
+"Content marketing to bezpośrednia sprzedaż produktów w sklepach stacjonarnych bez użycia internetu",
+"Content marketing to proces programowania aplikacji backendowych i systemów serwerowych",
+"Content marketing to analiza danych finansowych przedsiębiorstwa i raportowanie wyników"
+],0],
+["Email marketing?",[
+"Email marketing to forma marketingu polegająca na wysyłaniu spersonalizowanych wiadomości e-mail do klientów",
+"Email marketing to reklama prowadzona wyłącznie w telewizji lokalnej i stacjach radiowych",
+"Email marketing to tworzenie stron internetowych i aplikacji webowych dla firm",
+"Email marketing to projektowanie animacji i materiałów graficznych dla kampanii reklamowych"
+],0],
+["Konwersja?",[
+"Konwersja to moment, w którym użytkownik wykonuje pożądane działanie takie jak zakup, rejestracja lub zapis",
+"Konwersja to liczba wszystkich wejść na stronę internetową bez podejmowania działań",
+"Konwersja to proces wyświetlania reklam bez interakcji użytkownika z treścią",
+"Konwersja to zmiana wyglądu strony internetowej bez wpływu na użytkownika"
+],0],
+["SEO pomaga?",[
+"SEO pomaga zwiększać widoczność strony w wynikach wyszukiwania i generować darmowy ruch organiczny",
+"SEO pomaga tworzyć animacje 3D i efekty wizualne w grach komputerowych",
+"SEO pomaga zarządzać systemami płatności i transakcjami online w sklepach",
+"SEO pomaga automatyzować procesy produkcyjne w zakładach przemysłowych"
+],0],
+["Social media marketing?",[
+"Social media marketing to wykorzystanie platform społecznościowych do promocji marki i komunikacji z odbiorcami",
+"Social media marketing to drukowanie ulotek i plakatów reklamowych dla firm lokalnych",
+"Social media marketing to sprzedaż produktów wyłącznie w sklepach stacjonarnych",
+"Social media marketing to tworzenie systemów operacyjnych dla komputerów i urządzeń mobilnych"
+],0],
+["KPI?",[
+"KPI to kluczowe wskaźniki efektywności używane do mierzenia skuteczności działań marketingowych i biznesowych",
+"KPI to koszt produkcji materiałów reklamowych w kampaniach telewizyjnych",
+"KPI to rodzaj języka programowania używanego w tworzeniu aplikacji webowych",
+"KPI to nazwa pojedynczej kampanii reklamowej prowadzonej przez firmę"
+],0],
+["Analytics?",[
+"Analytics to narzędzia do zbierania i analizy danych o użytkownikach oraz ich zachowaniu na stronie internetowej",
+"Analytics to proces tworzenia animacji i efektów wizualnych w grach komputerowych",
+"Analytics to projektowanie logo oraz identyfikacji wizualnej dla marek i firm",
+"Analytics to system wysyłania wiadomości SMS do klientów w kampaniach marketingowych"
+],0]
+];
+
+let i=0,score=0,time=60,nick="Anon",timer,finished=false,startTime=0;
+
+function startTimer(){
+clearInterval(timer);
+timer=setInterval(()=>{
+time--;
+document.getElementById('timer').innerText=time;
+if(time<=0) next();
+},1000);
+}
+
+function load(){
+let x=q[i];
+document.getElementById('qNumber').innerText="Pytanie "+(i+1)+"/10";
+
+let btn=document.getElementById('nextBtn');
+btn.innerText=(i===9)?"Zakończ test":"Dalej";
+
+let arr=x[1].map((t,idx)=>({t,ok:idx===x[2]})).sort(()=>Math.random()-0.5);
+
+let html="<div class='question'><h3>"+x[0]+"</h3>";
+arr.forEach(o=>{
+html+=`<label class='option'><input type='radio' name='a' value='${o.ok}'> ${o.t}</label>`;
+});
+html+="</div>";
+document.getElementById('quizBox').innerHTML=html;
+}
+
+function next(){
+let s=document.querySelector('input[name=a]:checked');
+if(s && s.value==='true') score++;
+
+if(i===9){ finishConfirm(); return; }
+
+i++; time=60;
+load(); startTimer();
+}
+
+function prev(){
+if(i>0){ i--; load(); time=60; startTimer(); }
+}
+
+function finishConfirm(){
+let m=document.createElement('div');
+m.className="modal";
+m.innerHTML=`<div class='modal-box'><h3>Zakończyć test?</h3><button onclick='finish(true)'>Tak</button><button onclick='this.parentElement.parentElement.remove()'>Cofnij</button></div>`;
+document.body.appendChild(m);
+}
+
+function formatTime(ms){
+let s=(ms/1000).toFixed(2);
+return s;
+}
+
+function finish(go){
+if(!go || finished) return;
+finished=true;
+
+// zatrzymanie czasu
+clearInterval(timer);
+
+let end=Date.now();
+let duration=end-startTime;
+
+let msg="";
+if(score<=2) msg="Miernie";
+else if(score<=6) msg="Średnio";
+else if(score<=9) msg="Prawie dobrze";
+else msg="Znakomicie";
+
+save(duration);
+showTab('ranking');
+showBoard();
+document.getElementById('result').innerText=nick+" - "+score+"/10 ("+msg+")";
+}
+
+function save(timeMs){
+let r=JSON.parse(localStorage.getItem('r')||"[]");
+r.push({n:nick,s:score,t:timeMs});
+
+r.sort((a,b)=>b.s-a.s || a.t-b.t);
+
+localStorage.setItem('r',JSON.stringify(r));
+}
+
+function showBoard(){
+let r=JSON.parse(localStorage.getItem('r')||"[]");
+let b=document.getElementById('board');
+b.innerHTML="";
+
+r.forEach((x,idx)=>{
+let sec=(x.t/1000).toFixed(2);
+b.innerHTML+=`<li>#${idx+1} ${x.n} - ${x.s}/10 | ${sec} s</li>`;
+});
+}
+
+function showTab(t){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(t).classList.add('active');
+if(t==='ranking') showBoard();
+}
+
+function confirmNick(){
+let v=document.getElementById('nicknameInput').value.trim();
+if(v.length<1){alert('Min 1 znak');return;}
+nick=v;
+startTime=Date.now();
+document.getElementById('modal').remove();
+load();
+startTimer();
+}
+
+function cancelNick(){document.getElementById('nicknameInput').value="";}
+</script>
+
+</body>
+</html>
